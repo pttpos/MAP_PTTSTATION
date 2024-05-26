@@ -1,9 +1,11 @@
-// src/MapView.tsx
-
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Image, StyleSheet, Animated } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import { getData } from './getData';
+import Foot from './Footer';
+import CurrentLocationMarker from './CurrentLocationMarker';
+import { watchUserLocation, UserLocation } from './getCurrentLocation';
+import { Dimensions } from 'react-native';
 
 interface Station {
   id: number;
@@ -23,7 +25,10 @@ interface Station {
 }
 
 const MapViewComponent: React.FC = () => {
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [stations, setStations] = useState<Station[]>([]);
+  const mapRef = useRef<MapView>(null);
+  const pointerPosition = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const fetchStations = async () => {
@@ -37,43 +42,84 @@ const MapViewComponent: React.FC = () => {
     fetchStations();
   }, []);
 
+  useEffect(() => {
+    const startWatchingLocation = async () => {
+      await watchUserLocation((location) => {
+        setUserLocation(location);
+        if (mapRef.current) {
+          const zoomLevel = 0.01; // Adjust this value as needed
+          const region = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            latitudeDelta: zoomLevel,
+            longitudeDelta: zoomLevel * (Dimensions.get('window').width / Dimensions.get('window').height),
+          };
+          mapRef.current.animateToRegion(region);
+        }
+      });
+    };
+  
+    startWatchingLocation();
+  }, []);
+  
+
   return (
-    <MapView
-      style={styles.map}
-      initialRegion={{
-        latitude: 11.570444,
-        longitude: 104.905083,
-        latitudeDelta: 5, // Adjusted delta for a wider view
-        longitudeDelta: 5, // Adjusted delta for a wider view
-      }}
-    >
-      {stations.map(station => (
-        <Marker
-          key={station.id}
-          coordinate={{
-            latitude: parseFloat(station.latitude.toString()), // Convert latitude to number
-            longitude: parseFloat(station.longitude.toString()), // Convert longitude to number
-          }}
-          title={station.title}
-          description={station.address}
-        >
-          <Callout>
-            <View style={styles.callout}>
-              <Text style={styles.title}>{station.title}</Text>
-              <Text>{station.address}</Text>
-              <Image source={{ uri: station.picture }} style={styles.image} />
-              <Text>Status: {station.status}</Text>
-              <Text>Products: {station.product.join(', ')}</Text>
-              <Text>Services: {station.service.join(', ')}</Text>
-            </View>
-          </Callout>
-        </Marker>
-      ))}
-    </MapView>
+    <View style={styles.container}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        initialRegion={{
+          latitude: 11.570444,
+          longitude: 104.905083,
+          latitudeDelta: 5,
+          longitudeDelta: 5,
+        }}
+      >
+        {stations.map(station => (
+          <Marker
+            key={station.id}
+            coordinate={{
+              latitude: parseFloat(station.latitude.toString()),
+              longitude: parseFloat(station.longitude.toString()),
+            }}
+            title={station.title}
+            description={station.address}
+          >
+            <Callout>
+              <View style={styles.callout}>
+                <Text style={styles.title}>{station.title}</Text>
+                <Text>{station.address}</Text>
+                <Image source={{ uri: station.picture }} style={styles.image} />
+                <Text>Status: {station.status}</Text>
+                <Text>Products: {station.product.join(', ')}</Text>
+                <Text>Services: {station.service.join(', ')}</Text>
+              </View>
+            </Callout>
+          </Marker>
+        ))}
+        
+        {userLocation && (
+          <Marker
+            coordinate={userLocation}
+            anchor={{ x: 0.5, y: 0.5 }}
+            centerOffset={{ x: 0, y: -500 }}
+          >
+            <CurrentLocationMarker coordinate={userLocation} />
+          </Marker>
+        )}
+      </MapView>
+      <Foot
+        mapRef={mapRef}
+        userLocation={userLocation}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   map: {
     flex: 1,
   },
