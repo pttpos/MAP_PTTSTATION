@@ -52,7 +52,7 @@ const Footer: React.FC<FooterProps> = ({
             onPressIn={() => handleButtonAnimation(1)}
             onPressOut={() => handleButtonAnimation(0)}
             onPress={() => handleButtonPress(action)}
-            style={[styles.footerButton, { opacity: animation, backgroundColor: "#0061ff" }]}
+            style={[styles.footerButton, { opacity: animation, backgroundColor: "#30a8f5" }]}
         >
             <Ionicons name={iconName} size={Dimensions.get('window').width * 0.06} color="black" />
         </TouchableOpacity>
