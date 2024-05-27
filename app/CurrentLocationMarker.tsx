@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { View, Animated, StyleSheet, Easing } from "react-native";
+import { View, Animated, StyleSheet, Easing, Platform, PixelRatio } from "react-native";
 import { Marker } from "react-native-maps";
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -74,11 +74,20 @@ const CompassMarker: React.FC<Props> = ({ coordinate, size = 40, markerColor = "
     transform: [{ scale: pulseAnimation }],
   };
 
+  // Adjust the size of the marker container and compass icon based on the marker size
+  const markerContainerStyle = {
+    width: size + 10,
+    height: size + 10,
+  };
+
+  // Calculate the appropriate icon size based on the device's screen density
+  const iconSize = size * PixelRatio.getFontScale();
+
   return (
     <Marker coordinate={coordinate} anchor={{ x: 0.5, y: 0.5 }}>
-      <View style={styles.markerContainer}>
+      <View style={[styles.markerContainer, markerContainerStyle]}>
         <Animated.View style={[styles.compass, rotateStyle, pulseStyle]}>
-          <MaterialIcons name="location-pin" size={size} color={markerColor} style={styles.icon} />
+          <MaterialIcons name="location-pin" size={iconSize} color={markerColor} style={styles.icon} />
         </Animated.View>
       </View>
     </Marker>
@@ -102,7 +111,7 @@ const styles = StyleSheet.create({
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: {
-      width:2,
+      width: 2,
       height: 2,
     },
     shadowOpacity: 0.25,

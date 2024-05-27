@@ -19,7 +19,16 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.yourcompany.myapp12",
+      "versionCode": 1,
+      "useNextNotificationsApi": true,
+      "softwareKeyboardLayoutMode": "pan",
+      "userInterfaceStyle": "automatic"
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +42,5 @@
     "experiments": {
       "typedRoutes": true
     }
-    
-    
   }
 }
