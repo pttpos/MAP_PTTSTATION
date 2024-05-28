@@ -7,7 +7,10 @@ import {
   Animated,
   TouchableOpacity,
   Dimensions,
+  Modal,
   Linking,
+  ScrollView,
+  Button,
 } from "react-native";
 import MapView, { Marker, Callout } from "react-native-maps";
 import { getData } from "./getData";
@@ -15,8 +18,13 @@ import Foot from "./Footer";
 import CurrentLocationMarker from "./CurrentLocationMarker";
 import { UserLocation } from "./getCurrentLocation";
 import * as Location from "expo-location";
-import RNPickerSelect from "react-native-picker-select";
 import FilterForm from "./FilterForm";
+import RNPickerSelect from "react-native-picker-select";
+import { Ionicons } from "@expo/vector-icons";
+// import Block from "./Block";
+// import LayoutMapToggle from "./LayoutMapToggle";
+// import GoogleButton from "./GoogleButton";
+// import BlockImage from "./BlockImage";
 
 interface Station {
   id: number;
@@ -40,58 +48,43 @@ const MapViewComponent: React.FC = () => {
   const [stations, setStations] = useState<Station[]>([]);
   const mapRef = useRef<MapView>(null);
   const [showFilterForm, setShowFilterForm] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedMarker, setSelectedMarker] = useState<Station | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<number>(0);
+  const [mapType, setMapType] = useState<"standard" | "satellite">("standard");
+
   // Filter options
-  const [Other_productOptions, setOther_ProductOptions] = useState<string[]>(
-    []
-  );
+  const [Other_productOptions, setOther_ProductOptions] = useState<string[]>([]);
   const [productOptions, setProductOptions] = useState<string[]>([]);
   const [descriptionOptions, setDescriptionOptions] = useState<string[]>([]);
   const [serviceOptions, setServiceOptions] = useState<string[]>([]);
   const [provinceOptions, setProvinceOptions] = useState<string[]>([]);
   const [titleOptions, setTitleOptions] = useState<string[]>([]);
+
   // Selected filter values
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [selectedDescription, setSelectedDescription] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedProvince, setSelectedProvince] = useState<string>("");
   const [selectedTitle, setSelectedTitle] = useState<string>("");
-  const [selectedMarker, setSelectedMarker] = useState<any>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedBlock, setSelectedBlock] = useState<number>(0);
-  const [mapType, setMapType] = React.useState<"standard" | "satellite">(
-    "standard"
-  );
+  const [selectedOtherProduct, setSelectedOtherProduct] = useState<string | null>(null);
   const [filteredMarkers, setFilteredMarkers] = useState<Station[]>([]);
   const pointerPosition = useRef(new Animated.Value(0)).current;
-  const [selectedOtherProduct, setSelectedOtherProduct] = useState<string | null>(null);
 
-  // Fetching stations and watching location
   useEffect(() => {
     const fetchStations = async () => {
       try {
         const data = await getData();
         setStations(data.STATION);
-        setFilteredMarkers(data.STATION); // Initialize with all stations
+        setFilteredMarkers(data.STATION);
 
         // Extract unique values for filter options from fetched stations data
-        const allOtherProducts = data.STATION.flatMap(
-          (station: { other_product: any }) => station.other_product
-        );
-        const allProducts = data.STATION.flatMap(
-          (station: { product: any }) => station.product
-        );
-        const allDescriptions = data.STATION.flatMap(
-          (station: { description: any }) => station.description
-        );
-        const allServices = data.STATION.flatMap(
-          (station: { service: any }) => station.service
-        );
-        const allProvinces = data.STATION.map(
-          (station: { province: any }) => station.province
-        );
-        const allTitles = data.STATION.map(
-          (station: { title: any }) => station.title
-        );
+        const allOtherProducts = data.STATION.flatMap((station: Station) => station.other_product);
+        const allProducts = data.STATION.flatMap((station: Station) => station.product);
+        const allDescriptions = data.STATION.flatMap((station: Station) => station.description);
+        const allServices = data.STATION.flatMap((station: Station) => station.service);
+        const allProvinces = data.STATION.map((station: Station) => station.province);
+        const allTitles = data.STATION.map((station: Station) => station.title);
 
         setProvinceOptions(Array.from(new Set(allProvinces)));
         setProductOptions(Array.from(new Set(allProducts)));
@@ -144,9 +137,7 @@ const MapViewComponent: React.FC = () => {
     startWatchingLocation();
   }, []);
 
-  const handleUserLocationChange = (location: {
-    coords: { latitude: any; longitude: any };
-  }) => {
+  const handleUserLocationChange = (location: { coords: { latitude: any; longitude: any; }; }) => {
     setUserLocation({
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
@@ -162,42 +153,28 @@ const MapViewComponent: React.FC = () => {
     let filtered = stations;
 
     if (selectedProduct) {
-      filtered = filtered.filter((station) =>
-        station.product.includes(selectedProduct)
-      );
+      filtered = filtered.filter((station) => station.product.includes(selectedProduct));
     }
     if (selectedOtherProduct) {
-      filtered = filtered.filter((station) =>
-        station.other_product.includes(selectedOtherProduct)
-      );
+      filtered = filtered.filter((station) => station.other_product.includes(selectedOtherProduct));
     }
     if (selectedDescription) {
-      filtered = filtered.filter((station) =>
-        station.description.includes(selectedDescription)
-      );
+      filtered = filtered.filter((station) => station.description.includes(selectedDescription));
     }
 
     if (selectedService) {
-      filtered = filtered.filter((station) =>
-        station.service.includes(selectedService)
-      );
+      filtered = filtered.filter((station) => station.service.includes(selectedService));
     }
 
     if (selectedProvince) {
-      filtered = filtered.filter(
-        (station) => station.province === selectedProvince
-      );
+      filtered = filtered.filter((station) => station.province === selectedProvince);
     }
 
     setFilteredMarkers(filtered);
 
-    // Check if a title is selected
     if (selectedTitle) {
-      const selectedStation = filtered.find(
-        (station) => station.title === selectedTitle
-      );
+      const selectedStation = filtered.find((station) => station.title === selectedTitle);
       if (selectedStation) {
-        // Zoom to the marker of the selected title
         mapRef.current?.animateToRegion(
           {
             latitude: parseFloat(selectedStation.latitude.toString()),
@@ -209,31 +186,20 @@ const MapViewComponent: React.FC = () => {
         );
       }
     } else {
-      // Calculate the bounding box of filtered markers
       const filteredMarkersCoordinates = filtered.map((station) => ({
         latitude: parseFloat(station.latitude.toString()),
         longitude: parseFloat(station.longitude.toString()),
       }));
-      const minLat = Math.min(
-        ...filteredMarkersCoordinates.map((coord) => coord.latitude)
-      );
-      const maxLat = Math.max(
-        ...filteredMarkersCoordinates.map((coord) => coord.latitude)
-      );
-      const minLon = Math.min(
-        ...filteredMarkersCoordinates.map((coord) => coord.longitude)
-      );
-      const maxLon = Math.max(
-        ...filteredMarkersCoordinates.map((coord) => coord.longitude)
-      );
+      const minLat = Math.min(...filteredMarkersCoordinates.map((coord) => coord.latitude));
+      const maxLat = Math.max(...filteredMarkersCoordinates.map((coord) => coord.latitude));
+      const minLon = Math.min(...filteredMarkersCoordinates.map((coord) => coord.longitude));
+      const maxLon = Math.max(...filteredMarkersCoordinates.map((coord) => coord.longitude));
 
-      // Calculate the center and delta of the bounding box
       const latitude = (minLat + maxLat) / 2;
       const longitude = (minLon + maxLon) / 2;
-      const latitudeDelta = Math.abs(maxLat - minLat) * 1.2; // Add some padding
-      const longitudeDelta = Math.abs(maxLon - minLon) * 1.2; // Add some padding
+      const latitudeDelta = Math.abs(maxLat - minLat) * 1.2;
+      const longitudeDelta = Math.abs(maxLon - minLon) * 1.2;
 
-      // Set the map region to fit the bounding box of filtered markers
       mapRef.current?.animateToRegion(
         {
           latitude,
@@ -248,72 +214,37 @@ const MapViewComponent: React.FC = () => {
     setShowFilterForm(false);
   };
 
-
   useEffect(() => {
-    // If no province is selected, fetch options for all stations
     if (!selectedProvince) {
       const allTitles = stations.flatMap((station) => station.title);
       const allOtherProducts = stations.flatMap((station) => station.other_product);
       const allDescriptions = stations.flatMap((station) => station.description);
       const allServices = stations.flatMap((station) => station.service);
-  
+
       setTitleOptions(Array.from(new Set(allTitles)));
       setOther_ProductOptions(Array.from(new Set(allOtherProducts)));
       setDescriptionOptions(Array.from(new Set(allDescriptions)));
       setServiceOptions(Array.from(new Set(allServices)));
     } else {
-      // If a province is selected, filter options based on the selected province
       const filteredTitles = stations
         .filter((station) => station.province === selectedProvince)
         .flatMap((station) => station.title);
       setTitleOptions(Array.from(new Set(filteredTitles)));
-  
+
       const filteredOtherProducts = stations
         .filter((station) => station.province === selectedProvince)
         .flatMap((station) => station.other_product);
       setOther_ProductOptions(Array.from(new Set(filteredOtherProducts)));
-  
+
       const filteredDescriptions = stations
         .filter((station) => station.province === selectedProvince)
         .flatMap((station) => station.description);
       setDescriptionOptions(Array.from(new Set(filteredDescriptions)));
-  
+
       const filteredServices = stations
         .filter((station) => station.province === selectedProvince)
         .flatMap((station) => station.service);
       setServiceOptions(Array.from(new Set(filteredServices)));
-    }
-  }, [selectedProvince]);
-  
-  const updateTitleOptions = (selectedProvince: string) => {
-    const filteredTitles = stations
-      .filter((station) => station.province === selectedProvince)
-      .flatMap((station) => station.title);
-    const uniqueTitles = Array.from(new Set(filteredTitles));
-    setTitleOptions(uniqueTitles);
-
-    const filteredOtherProducts = stations
-      .filter((station) => station.province === selectedProvince)
-      .flatMap((station) => station.other_product);
-    const uniqueOtherProducts = Array.from(new Set(filteredOtherProducts));
-    setOther_ProductOptions(uniqueOtherProducts);
-
-    const filteredDescriptions = stations
-      .filter((station) => station.province === selectedProvince)
-      .flatMap((station) => station.description);
-    const uniqueDescriptions = Array.from(new Set(filteredDescriptions));
-    setDescriptionOptions(uniqueDescriptions);
-
-    const filteredServices = stations
-      .filter((station) => station.province === selectedProvince)
-      .flatMap((station) => station.service);
-    const uniqueServices = Array.from(new Set(filteredServices));
-    setServiceOptions(uniqueServices);
-  };
-
-  useEffect(() => {
-    if (selectedProvince) {
-      updateTitleOptions(selectedProvince);
     }
   }, [selectedProvince]);
 
@@ -332,15 +263,34 @@ const MapViewComponent: React.FC = () => {
     }
   }, [selectedTitle]);
 
-  // Hide filter form smoothly
-  const [] = useState(new Animated.Value(0));
+  const handleMarkerPress = (marker: Station) => {
+    setSelectedMarker(marker);
+    setModalVisible(true);
+  };
 
-  // Function to toggle filter form visibility
+  const renderModalContent = () => {
+    if (!selectedMarker) return null;
+
+    return (
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>{selectedMarker.title}</Text>
+        <Text>{selectedMarker.address}</Text>
+        <Image source={{ uri: selectedMarker.picture }} style={styles.modalImage} />
+        <Text>Status: {selectedMarker.status}</Text>
+        <Text>Products: {selectedMarker.product.join(", ")}</Text>
+        <Text>Services: {selectedMarker.service.join(", ")}</Text>
+        <Text>Promotion: {selectedMarker.promotion.join(", ")}</Text>
+        <Button title="Close" onPress={() => setModalVisible(false)} />
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <MapView
         ref={mapRef}
         style={styles.map}
+        mapType={mapType}
         initialRegion={{
           latitude: 11.570444,
           longitude: 104.905083,
@@ -357,6 +307,7 @@ const MapViewComponent: React.FC = () => {
             }}
             title={station.title}
             description={station.address}
+            onPress={() => handleMarkerPress(station)}
           >
             <Callout>
               <View style={styles.callout}>
@@ -373,19 +324,14 @@ const MapViewComponent: React.FC = () => {
         {userLocation && (
           <Marker
             coordinate={userLocation}
-            anchor={{ x: 0.5, y: 0.5 }} // Ensures the marker is centered on the coordinate
-            centerOffset={{ x: 0.5, y: 4 }} // Offset the center to keep it fixed when zooming out
+            anchor={{ x: 0.5, y: 0.5 }}
+            centerOffset={{ x: 0.5, y: 4 }}
           >
             <CurrentLocationMarker coordinate={userLocation} />
           </Marker>
         )}
       </MapView>
-      <Foot
-        setShowFilterForm={setShowFilterForm}
-        mapRef={mapRef}
-        userLocation={userLocation}
-      />
-      {/* Filter Form */}
+      <Foot setShowFilterForm={setShowFilterForm} mapRef={mapRef} userLocation={userLocation} />
       <FilterForm
         showFilterForm={showFilterForm}
         selectedProvince={selectedProvince}
@@ -409,7 +355,9 @@ const MapViewComponent: React.FC = () => {
         applyFilters={applyFilters}
         toggleFilterForm={() => setShowFilterForm(!showFilterForm)}
       />
-
+      <Modal visible={modalVisible} animationType="slide">
+        {renderModalContent()}
+      </Modal>
     </View>
   );
 };
@@ -437,7 +385,22 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
   },
+  modalContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalTitle: {
+    fontWeight: "bold",
+    fontSize: 24,
+    marginBottom: 10,
+  },
+  modalImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
 });
-
 
 export default MapViewComponent;
