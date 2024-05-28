@@ -62,14 +62,14 @@ const FilterForm: React.FC<FilterFormProps> = ({
       filterByStation: "Filter by Station:",
       filterByProduct: "Filter by Product:",
       filterByOtherProduct: "Filter by Other Product:",
-      filterByDescription: "Filter by Description:",
-      filterByService: "Filter by Service:",
+      filterByDescription: "Filter by Service:", // Updated from "Filter by Description"
+      filterByService: "Filter by Payment:", // Updated from "Filter by Service"
       selectProvince: "Select Province",
       selectTitle: "Select Title",
       selectProduct: "Select Product",
       selectOtherProduct: "Select Other Product",
-      selectDescription: "Select Description",
-      selectService: "Select Service",
+      selectDescription: "Select Service", // Updated from "Select Description"
+      selectService: "Select Payment", // Updated from "Select Service"
       applyFilters: "Apply Filters",
       close: "Close",
       english: "English",
@@ -81,14 +81,14 @@ const FilterForm: React.FC<FilterFormProps> = ({
       filterByStation: "ចូលស្វែងរកតាមស្ថានភាព:",
       filterByProduct: "ចូលស្វែងរកតាមផលិតផល:",
       filterByOtherProduct: "ចូលស្វែងរកតាមផលិតផលផ្សេងៗ:",
-      filterByDescription: "ចូលស្វែងរកតាមការពិពណ៌នា:",
-      filterByService: "ចូលស្វែងរកតាមសេវាកម្ម:",
+      filterByDescription: "ចូលស្វែងរកតាមសេវាកម្ម:", // Updated from "ចូលស្វែងរកតាមការពិពណ៌នា:"
+      filterByService: "ចូលស្វែងរកតាមការទូទាត់:", // Updated from "ចូលស្វែងរកតាមសេវាកម្ម:"
       selectProvince: "ជ្រើសរើសខេត្ត",
       selectTitle: "ជ្រើសរើសចំណងជើង",
       selectProduct: "ជ្រើសរើសផលិតផល",
       selectOtherProduct: "ជ្រើសរើសផលិតផលផ្សេងៗ",
-      selectDescription: "ជ្រើសរើសការពិពណ៌នា",
-      selectService: "ជ្រើសរើសសេវាកម្ម",
+      selectDescription: "ជ្រើសរើសសេវាកម្ម", // Updated from "ជ្រើសរើសការពិពណ៌នា"
+      selectService: "ជ្រើសរើសការទូទាត់", // Updated from "ជ្រើសរើសសេវាកម្ម"
       applyFilters: "អនុវត្តចម្បង",
       close: "បិទ",
       english: "អង់គ្លេស",
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     width: "80%", // Adjust width as necessary
   },
   filterGroup: {
-    marginBottom: 15,
+    marginBottom: 5,
   },
   filterTitle: {
     fontWeight: "bold",
