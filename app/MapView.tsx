@@ -248,28 +248,6 @@ const MapViewComponent: React.FC = () => {
     setShowFilterForm(false);
   };
 
-  const handleTitleSelection = (title: string) => {
-    const stationWithTitle = stations.find(
-      (station) => station.title === title
-    );
-    if (stationWithTitle) {
-      const provinceOfTitle = stationWithTitle.province;
-      const stationInProvince = stations.find(
-        (station) => station.province === provinceOfTitle
-      );
-      if (stationInProvince) {
-        mapRef.current?.animateToRegion(
-          {
-            latitude: stationInProvince.latitude,
-            longitude: stationInProvince.longitude,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
-          },
-          500
-        );
-      }
-    }
-  };
 
   useEffect(() => {
     // If no province is selected, fetch options for all stations
@@ -354,42 +332,10 @@ const MapViewComponent: React.FC = () => {
     }
   }, [selectedTitle]);
 
-  // Animation value for filter form
-  const filterFormAnimation = useRef(new Animated.Value(0)).current;
-
-  // Function to animate filter form
-  const animateFilterForm = (toValue: number) => {
-    Animated.timing(filterFormAnimation, {
-      toValue,
-      duration: 300, // Adjust duration as needed
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Show filter form smoothly
-  const showFilterFormSmoothly = () => {
-    setShowFilterForm(true);
-    animateFilterForm(1); // Animate to fully visible
-  };
-
   // Hide filter form smoothly
-  const hideFilterFormSmoothly = () => {
-    animateFilterForm(0); // Animate to fully hidden
-    setTimeout(() => {
-      setShowFilterForm(false);
-    }, 300); // Adjust to match the animation duration
-  };
-  const [filterFormOpacity] = useState(new Animated.Value(0));
+  const [] = useState(new Animated.Value(0));
 
   // Function to toggle filter form visibility
-  const toggleFilterForm = () => {
-    setShowFilterForm((prev) => !prev);
-    Animated.timing(filterFormOpacity, {
-      toValue: showFilterForm ? 0 : 1,
-      duration: 300, // Adjust duration as needed
-      useNativeDriver: true,
-    }).start();
-  };
   return (
     <View style={styles.container}>
       <MapView
