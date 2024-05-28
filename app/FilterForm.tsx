@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,8 +12,8 @@ interface FilterFormProps {
   selectedProvince: string;
   selectedTitle: string;
   selectedProduct: string;
-  selectedOtherProduct: string;
-  selectedDescription: string;
+  selectedOtherProduct: string | null;
+  selectedDescription: string | null;
   selectedService: string;
   setSelectedProvince: (value: string) => void;
   setSelectedTitle: (value: string) => void;
@@ -54,10 +54,74 @@ const FilterForm: React.FC<FilterFormProps> = ({
   applyFilters,
   toggleFilterForm,
 }) => {
-  // Define handleTitleSelection function
-  const handleTitleSelection = (value: string) => {
-    // Add your logic here for handling title selection
-    console.log("Selected title:", value);
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
+
+  const languageData: { [key: string]: { [key: string]: string } } = {
+    en: {
+      filterByProvince: "Filter by Province:",
+      filterByStation: "Filter by Station:",
+      filterByProduct: "Filter by Product:",
+      filterByOtherProduct: "Filter by Other Product:",
+      filterByDescription: "Filter by Description:",
+      filterByService: "Filter by Service:",
+      selectProvince: "Select Province",
+      selectTitle: "Select Title",
+      selectProduct: "Select Product",
+      selectOtherProduct: "Select Other Product",
+      selectDescription: "Select Description",
+      selectService: "Select Service",
+      applyFilters: "Apply Filters",
+      close: "Close",
+      english: "English",
+      khmer: "Khmer",
+      thai: "Thai",
+    },
+    kh: {
+      filterByProvince: "ចូលស្វែងរកតាមខេត្ត:",
+      filterByStation: "ចូលស្វែងរកតាមស្ថានភាព:",
+      filterByProduct: "ចូលស្វែងរកតាមផលិតផល:",
+      filterByOtherProduct: "ចូលស្វែងរកតាមផលិតផលផ្សេងៗ:",
+      filterByDescription: "ចូលស្វែងរកតាមការពិពណ៌នា:",
+      filterByService: "ចូលស្វែងរកតាមសេវាកម្ម:",
+      selectProvince: "ជ្រើសរើសខេត្ត",
+      selectTitle: "ជ្រើសរើសចំណងជើង",
+      selectProduct: "ជ្រើសរើសផលិតផល",
+      selectOtherProduct: "ជ្រើសរើសផលិតផលផ្សេងៗ",
+      selectDescription: "ជ្រើសរើសការពិពណ៌នា",
+      selectService: "ជ្រើសរើសសេវាកម្ម",
+      applyFilters: "អនុវត្តចម្បង",
+      close: "បិទ",
+      english: "អង់គ្លេស",
+      khmer: "ខ្មែរ",
+      thai: "ថៃ",
+    },
+    th: {
+      filterByProvince: "ค้นหาตามจังหวัด:",
+      filterByStation: "ค้นหาตามสถานี:",
+      filterByProduct: "ค้นหาตามผลิตภัณฑ์:",
+      filterByOtherProduct: "ค้นหาตามผลิตภัณฑ์อื่นๆ:",
+      filterByDescription: "ค้นหาตามคำอธิบาย:",
+      filterByService: "ค้นหาตามบริการ:",
+      selectProvince: "เลือกจังหวัด",
+      selectTitle: "เลือกชื่อสถานี",
+      selectProduct: "เลือกผลิตภัณฑ์",
+      selectOtherProduct: "เลือกผลิตภัณฑ์อื่นๆ",
+      selectDescription: "เลือกคำอธิบาย",
+      selectService: "เลือกบริการ",
+      applyFilters: "นำไปใช้ตัวกรอง",
+      close: "ปิด",
+      english: "อังกฤษ",
+      khmer: "เขมร",
+      thai: "ไทย",
+    },
+  };
+
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
+  };
+
+  const getTranslatedText = (textKey: string) => {
+    return languageData[selectedLanguage][textKey];
   };
 
   if (!showFilterForm) {
@@ -67,10 +131,44 @@ const FilterForm: React.FC<FilterFormProps> = ({
   return (
     <View style={styles.centeredView}>
       <View style={styles.filterContainer}>
+        {/* Language Selection Buttons */}
+        <View style={styles.languageSelection}>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => handleLanguageChange("en")}
+          >
+            <Text style={styles.languageButtonText}>
+              {getTranslatedText("english")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => handleLanguageChange("kh")}
+          >
+            <Text style={styles.languageButtonText}>
+              {getTranslatedText("khmer")}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => handleLanguageChange("th")}
+          >
+            <Text style={styles.languageButtonText}>
+              {getTranslatedText("thai")}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Filter elements */}
         <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>Filter by Province:</Text>
+          <Text style={styles.filterTitle}>
+            {getTranslatedText("filterByProvince")}
+          </Text>
           <RNPickerSelect
-            placeholder={{ label: "Select Province", value: null }}
+            placeholder={{
+              label: getTranslatedText("selectProvince"),
+              value: null,
+            }}
             value={selectedProvince}
             onValueChange={(value) => setSelectedProvince(value)}
             items={provinceOptions.map((option) => ({
@@ -81,14 +179,20 @@ const FilterForm: React.FC<FilterFormProps> = ({
           />
         </View>
 
+        {/* Filter by Station */}
         <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>Filter by Title:</Text>
+          <Text style={styles.filterTitle}>
+            {getTranslatedText("filterByStation")}
+          </Text>
           <RNPickerSelect
-            placeholder={{ label: "Select Title", value: null }}
+            placeholder={{
+              label: getTranslatedText("selectTitle"),
+              value: null,
+            }}
             value={selectedTitle}
             onValueChange={(value) => {
               setSelectedTitle(value);
-              handleTitleSelection(value); // Call the handleTitleSelection function
+              // Additional logic for title selection if needed
             }}
             items={titleOptions.map((option) => ({
               label: option,
@@ -98,10 +202,16 @@ const FilterForm: React.FC<FilterFormProps> = ({
           />
         </View>
 
+        {/* Filter by Product */}
         <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>Filter by Product:</Text>
+          <Text style={styles.filterTitle}>
+            {getTranslatedText("filterByProduct")}
+          </Text>
           <RNPickerSelect
-            placeholder={{ label: "Select Product", value: null }}
+            placeholder={{
+              label: getTranslatedText("selectProduct"),
+              value: null,
+            }}
             value={selectedProduct}
             onValueChange={(value) => setSelectedProduct(value)}
             items={productOptions.map((option) => ({
@@ -112,10 +222,16 @@ const FilterForm: React.FC<FilterFormProps> = ({
           />
         </View>
 
+        {/* Filter by Other Product */}
         <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>Filter by Other Product:</Text>
+          <Text style={styles.filterTitle}>
+            {getTranslatedText("filterByOtherProduct")}
+          </Text>
           <RNPickerSelect
-            placeholder={{ label: "Select Other Product", value: null }}
+            placeholder={{
+              label: getTranslatedText("selectOtherProduct"),
+              value: null,
+            }}
             value={selectedOtherProduct}
             onValueChange={(value) => setSelectedOtherProduct(value)}
             items={otherProductOptions.map((option) => ({
@@ -126,10 +242,16 @@ const FilterForm: React.FC<FilterFormProps> = ({
           />
         </View>
 
+        {/* Filter by Description */}
         <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>Filter by Description:</Text>
+          <Text style={styles.filterTitle}>
+            {getTranslatedText("filterByDescription")}
+          </Text>
           <RNPickerSelect
-            placeholder={{ label: "Select Description", value: null }}
+            placeholder={{
+              label: getTranslatedText("selectDescription"),
+              value: null,
+            }}
             value={selectedDescription}
             onValueChange={(value) => setSelectedDescription(value)}
             items={descriptionOptions.map((option) => ({
@@ -140,10 +262,16 @@ const FilterForm: React.FC<FilterFormProps> = ({
           />
         </View>
 
+        {/* Filter by Service */}
         <View style={styles.filterGroup}>
-          <Text style={styles.filterTitle}>Filter by Service:</Text>
+          <Text style={styles.filterTitle}>
+            {getTranslatedText("filterByService")}
+          </Text>
           <RNPickerSelect
-            placeholder={{ label: "Select Service", value: null }}
+            placeholder={{
+              label: getTranslatedText("selectService"),
+              value: null,
+            }}
             value={selectedService}
             onValueChange={(value) => setSelectedService(value)}
             items={serviceOptions.map((option) => ({
@@ -154,14 +282,19 @@ const FilterForm: React.FC<FilterFormProps> = ({
           />
         </View>
 
+        {/* Apply Filters and Close buttons */}
         <TouchableOpacity style={styles.filterButton} onPress={applyFilters}>
-          <Text style={styles.filterButtonText}>Apply Filters</Text>
+          <Text style={styles.filterButtonText}>
+            {getTranslatedText("applyFilters")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.filterCloseButton}
           onPress={toggleFilterForm}
         >
-          <Text style={styles.filterButtonText}>Close</Text>
+          <Text style={styles.filterButtonText}>
+            {getTranslatedText("close")}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -214,6 +347,19 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     color: "white",
+    fontWeight: "bold",
+  },
+  languageSelection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  languageButton: {
+    backgroundColor: "#ccc",
+    padding: 10,
+    borderRadius: 5,
+  },
+  languageButtonText: {
     fontWeight: "bold",
   },
 });

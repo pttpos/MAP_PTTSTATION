@@ -40,7 +40,6 @@ const MapViewComponent: React.FC = () => {
   const [stations, setStations] = useState<Station[]>([]);
   const mapRef = useRef<MapView>(null);
   const [showFilterForm, setShowFilterForm] = useState(false);
-
   // Filter options
   const [Other_productOptions, setOther_ProductOptions] = useState<string[]>(
     []
@@ -50,16 +49,12 @@ const MapViewComponent: React.FC = () => {
   const [serviceOptions, setServiceOptions] = useState<string[]>([]);
   const [provinceOptions, setProvinceOptions] = useState<string[]>([]);
   const [titleOptions, setTitleOptions] = useState<string[]>([]);
-
   // Selected filter values
   const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [selectedOtherProduct, setSelectedOtherProduct] = useState<string>("");
-  const [selectedDescription, setSelectedDescription] = useState<string>("");
+  const [selectedDescription, setSelectedDescription] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<string>("");
   const [selectedProvince, setSelectedProvince] = useState<string>("");
   const [selectedTitle, setSelectedTitle] = useState<string>("");
-
-
   const [selectedMarker, setSelectedMarker] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<number>(0);
@@ -68,6 +63,7 @@ const MapViewComponent: React.FC = () => {
   );
   const [filteredMarkers, setFilteredMarkers] = useState<Station[]>([]);
   const pointerPosition = useRef(new Animated.Value(0)).current;
+  const [selectedOtherProduct, setSelectedOtherProduct] = useState<string | null>(null);
 
   // Fetching stations and watching location
   useEffect(() => {
@@ -276,22 +272,65 @@ const MapViewComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    if (selectedProvince) {
+    // If no province is selected, fetch options for all stations
+    if (!selectedProvince) {
+      const allTitles = stations.flatMap((station) => station.title);
+      const allOtherProducts = stations.flatMap((station) => station.other_product);
+      const allDescriptions = stations.flatMap((station) => station.description);
+      const allServices = stations.flatMap((station) => station.service);
+  
+      setTitleOptions(Array.from(new Set(allTitles)));
+      setOther_ProductOptions(Array.from(new Set(allOtherProducts)));
+      setDescriptionOptions(Array.from(new Set(allDescriptions)));
+      setServiceOptions(Array.from(new Set(allServices)));
+    } else {
+      // If a province is selected, filter options based on the selected province
       const filteredTitles = stations
         .filter((station) => station.province === selectedProvince)
-        .map((station) => station.title);
+        .flatMap((station) => station.title);
       setTitleOptions(Array.from(new Set(filteredTitles)));
-    } else {
-      setTitleOptions([]);
+  
+      const filteredOtherProducts = stations
+        .filter((station) => station.province === selectedProvince)
+        .flatMap((station) => station.other_product);
+      setOther_ProductOptions(Array.from(new Set(filteredOtherProducts)));
+  
+      const filteredDescriptions = stations
+        .filter((station) => station.province === selectedProvince)
+        .flatMap((station) => station.description);
+      setDescriptionOptions(Array.from(new Set(filteredDescriptions)));
+  
+      const filteredServices = stations
+        .filter((station) => station.province === selectedProvince)
+        .flatMap((station) => station.service);
+      setServiceOptions(Array.from(new Set(filteredServices)));
     }
   }, [selectedProvince]);
-
+  
   const updateTitleOptions = (selectedProvince: string) => {
     const filteredTitles = stations
       .filter((station) => station.province === selectedProvince)
       .flatMap((station) => station.title);
     const uniqueTitles = Array.from(new Set(filteredTitles));
     setTitleOptions(uniqueTitles);
+
+    const filteredOtherProducts = stations
+      .filter((station) => station.province === selectedProvince)
+      .flatMap((station) => station.other_product);
+    const uniqueOtherProducts = Array.from(new Set(filteredOtherProducts));
+    setOther_ProductOptions(uniqueOtherProducts);
+
+    const filteredDescriptions = stations
+      .filter((station) => station.province === selectedProvince)
+      .flatMap((station) => station.description);
+    const uniqueDescriptions = Array.from(new Set(filteredDescriptions));
+    setDescriptionOptions(uniqueDescriptions);
+
+    const filteredServices = stations
+      .filter((station) => station.province === selectedProvince)
+      .flatMap((station) => station.service);
+    const uniqueServices = Array.from(new Set(filteredServices));
+    setServiceOptions(uniqueServices);
   };
 
   useEffect(() => {
@@ -340,17 +379,17 @@ const MapViewComponent: React.FC = () => {
       setShowFilterForm(false);
     }, 300); // Adjust to match the animation duration
   };
-const [filterFormOpacity] = useState(new Animated.Value(0));
+  const [filterFormOpacity] = useState(new Animated.Value(0));
 
-// Function to toggle filter form visibility
-const toggleFilterForm = () => {
-  setShowFilterForm((prev) => !prev);
-  Animated.timing(filterFormOpacity, {
-    toValue: showFilterForm ? 0 : 1,
-    duration: 300, // Adjust duration as needed
-    useNativeDriver: true,
-  }).start();
-};
+  // Function to toggle filter form visibility
+  const toggleFilterForm = () => {
+    setShowFilterForm((prev) => !prev);
+    Animated.timing(filterFormOpacity, {
+      toValue: showFilterForm ? 0 : 1,
+      duration: 300, // Adjust duration as needed
+      useNativeDriver: true,
+    }).start();
+  };
   return (
     <View style={styles.container}>
       <MapView
@@ -401,30 +440,29 @@ const toggleFilterForm = () => {
         userLocation={userLocation}
       />
       {/* Filter Form */}
-{/* Filter Form */}
-<FilterForm
-  showFilterForm={showFilterForm}
-  selectedProvince={selectedProvince}
-  selectedTitle={selectedTitle}
-  selectedProduct={selectedProduct}
-  selectedOtherProduct={selectedOtherProduct}
-  selectedDescription={selectedDescription}
-  selectedService={selectedService}
-  setSelectedProvince={setSelectedProvince}
-  setSelectedTitle={setSelectedTitle}
-  setSelectedProduct={setSelectedProduct}
-  setSelectedOtherProduct={setSelectedOtherProduct}
-  setSelectedDescription={setSelectedDescription}
-  setSelectedService={setSelectedService}
-  provinceOptions={provinceOptions}
-  titleOptions={titleOptions}
-  productOptions={productOptions}
-  otherProductOptions={Other_productOptions}
-  descriptionOptions={descriptionOptions}
-  serviceOptions={serviceOptions}
-  applyFilters={applyFilters}
-  toggleFilterForm={() => setShowFilterForm(!showFilterForm)}
-/>
+      <FilterForm
+        showFilterForm={showFilterForm}
+        selectedProvince={selectedProvince}
+        selectedTitle={selectedTitle}
+        selectedProduct={selectedProduct}
+        selectedOtherProduct={selectedOtherProduct}
+        selectedDescription={selectedDescription}
+        selectedService={selectedService}
+        setSelectedProvince={setSelectedProvince}
+        setSelectedTitle={setSelectedTitle}
+        setSelectedProduct={setSelectedProduct}
+        setSelectedOtherProduct={setSelectedOtherProduct}
+        setSelectedDescription={setSelectedDescription}
+        setSelectedService={setSelectedService}
+        provinceOptions={provinceOptions}
+        titleOptions={titleOptions}
+        productOptions={productOptions}
+        otherProductOptions={Other_productOptions}
+        descriptionOptions={descriptionOptions}
+        serviceOptions={serviceOptions}
+        applyFilters={applyFilters}
+        toggleFilterForm={() => setShowFilterForm(!showFilterForm)}
+      />
 
     </View>
   );
@@ -453,69 +491,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
   },
-  filterContainer: {
-    position: "absolute",
-    top: 20,
-    left: 10,
-    width: width - 20,
-    padding: 10,
-    backgroundColor: "white",
-    borderRadius: 20,
-    zIndex: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  filterGroup: {
-    marginBottom: 10,
-  },
-  filterTitle: {
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  filterButton: {
-    backgroundColor: "#007AFF",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
-    alignItems: "center",
-  },
-  filterButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  filterCloseButton: {
-    backgroundColor: "#FF3B30",
-    padding: 10,
-    borderRadius: 10,
-    marginTop: 10,
-    alignItems: "center",
-  },
 });
 
-const pickerSelectStyles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "gray",
-    borderRadius: 4,
-    color: "black",
-    paddingRight: 30, // to ensure the text is never behind the icon
-  },
-  inputAndroid: {
-    fontSize: 16,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 0.5,
-    borderColor: "purple",
-    borderRadius: 8,
-    color: "black",
-    paddingRight: 30, // to ensure the text is never behind the icon
-  },
-});
 
 export default MapViewComponent;
